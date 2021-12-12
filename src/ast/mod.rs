@@ -21,7 +21,8 @@ pub enum Expression{
     Boolean(bool),
     Null,
     If(Box<Expression>, Option<BlockStatement>, Option<BlockStatement>), // (Condition, Consequence, Alternative)
-    Function(Vec<Identifier>, Option<BlockStatement>)
+    Function(Vec<Identifier>, Option<BlockStatement>),
+    Call(Box<Expression>, Vec<Expression>) // Identifier or function literal
 }
 
 #[derive(Debug,PartialEq, Eq)]

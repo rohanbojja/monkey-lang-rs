@@ -5,7 +5,7 @@ use crate::{
 };
 
 #[derive(Debug)]
-struct Parser<'a> {
+pub struct Parser<'a> {
     l: Lexer<'a>,
     current_token: Token,
     peek_token: Token,
@@ -37,6 +37,7 @@ impl<'a> Parser<'a> {
 
     fn exp_to_sticky(token: &Token) -> Sticky {
         match token {
+            Token::LParen => Sticky::CALL,
             Token::Plus | Token::Minus => Sticky::SUM,
             Token::Asterisk | Token::Slash => Sticky::PRODUCT,
             Token::Lt | Token::Gt => Sticky::LESSGREATER,
@@ -58,10 +59,6 @@ impl<'a> Parser<'a> {
     fn parse_infix_expression(&mut self, left: ast::Expression) -> Option<ast::Expression> {
         let operator = self.current_token.clone();
         let stick = self.cur_stickiness();
-        println!(
-            "\t\tINFIX\t\top: {:?} peek: {:?}",
-            operator, self.peek_token
-        );
         self.next_token();
         match self.parse_expression(stick) {
             Some(right) => Some(Expression::Infix(operator, Box::new(left), Box::new(right))),
@@ -80,7 +77,6 @@ impl<'a> Parser<'a> {
     fn parse_grouped_expression(&mut self) -> Option<ast::Expression> {
         self.next_token();
         let expr = self.parse_expression(Sticky::LOWEST);
-        println!("EXPR GRP: {:?}", expr);
         if Token::RParen.ne(&self.peek_token) {
             self.next_token();
             self.next_token();
@@ -95,7 +91,6 @@ impl<'a> Parser<'a> {
         //"if (x < y) { x }"
         if self.expect_peek(Token::LParen) {
             if let Some(condition) = self.parse_expression(Sticky::LOWEST) {
-                println!("Condition: {:?}\t cur_token: {:?}", condition, self.current_token);
                 if self.expect_peek(Token::RParen) {
                     let consequence = self.parse_block_expression();
                     if self.peek_token == Token::Else {
@@ -167,7 +162,6 @@ impl<'a> Parser<'a> {
         //fn(x, y) { x + y; }
         if self.expect_peek(Token::LParen) {
             let params = self.parse_function_params();
-            println!("Got params: {:?}, cur token: {:?}", params, self.current_token);
             if self.expect_peek(Token::RParen) {
                 let block = self.parse_block_expression();
                 Some(Expression::Function(params, block))
@@ -189,11 +183,9 @@ impl<'a> Parser<'a> {
                 left_exp
             }
             Token::Bang | Token::Minus => {
-                println!("\t\tBANG");
                 let operator = self.current_token.clone();
                 self.next_token();
                 let right_exp = self.parse_expression(Sticky::PREFIX);
-                println!("RIGHT PREFIX: {:?}", right_exp);
                 if let Some(exp) = right_exp {
                     let prefix_exp = Expression::Prefix(operator, Box::new(exp));
                     Some(prefix_exp)
@@ -206,7 +198,6 @@ impl<'a> Parser<'a> {
                 left_exp
             }
             Token::LParen => {
-                println!("\t\tLPAREN");
                 let left_exp = self.parse_grouped_expression();
                 left_exp
             }
@@ -216,10 +207,15 @@ impl<'a> Parser<'a> {
             }
         };
 
-        // println!("LEFT: {:?}", left);
-        // ("!(true == true)", "(!(true == true))"),
+        /*
+        infix stuff
+         */
         while self.peek_token != Token::Semicolon && stick < self.peek_stickiness() {
             match self.peek_token {
+                Token::LParen => {
+                    self.next_token();
+                    left = self.parse_call_arguments(left.unwrap());
+                }
                 Token::Asterisk
                 | Token::Plus
                 | Token::Minus
@@ -234,8 +230,31 @@ impl<'a> Parser<'a> {
                 _ => left = left,
             }
         }
-        // println!("RIGHT: {:?}", left);
         left
+    }
+
+    fn parse_call_arguments(&mut self, identifier: ast::Expression) -> Option<ast::Expression> {
+        let mut arguments: Vec<ast::Expression> = vec![];
+        if self.peek_token != Token::RParen {
+            self.next_token();
+            loop {
+                if let Some(expr) = self.parse_expression(Sticky::LOWEST) {
+                    arguments.push(expr);
+                } else {
+                    self.log_error("Error parsing function arguments".to_string());
+                }
+                match self.peek_token {
+                    Token::Comma => self.expect_peek(Token::Comma),
+                    Token::RParen => break,
+                    _ => {
+                        self.log_error("Error parsing function parameters".to_string());
+                        break;
+                    }
+                };
+            }
+        }
+        self.expect_peek(Token::RParen);
+        Some(ast::Expression::Call(Box::new(identifier), arguments))
     }
 
     fn parse_identifier(&self) -> Option<ast::Expression> {
@@ -264,7 +283,6 @@ impl<'a> Parser<'a> {
             Token::Illegal => None,
             Token::Semicolon => None,
             Token::Let => {
-                // println!("Parse let statement BEGIN");
                 self.next_token();
                 let var = &self.current_token;
                 if let Token::Ident(ref val) = var {
@@ -273,16 +291,18 @@ impl<'a> Parser<'a> {
                         value: val.to_string(),
                     };
                     self.expect_peek(Token::Assign);
-                    let expr = ast::Expression::EMPTY;
-                    loop {
-                        // println!("{:?}", self.current_token);
-                        if self.current_token != Token::Semicolon {
-                            self.next_token();
-                        } else {
-                            break;
+                    if let Some(expr) = self.parse_expression(Sticky::LOWEST) {
+                        loop {
+                            if self.current_token != Token::Semicolon {
+                                self.next_token();
+                            } else {
+                                break;
+                            }
                         }
+                        Some(Statement::LetStatement(iden, expr))
+                    } else {
+                        None
                     }
-                    Some(Statement::LetStatement(iden, expr))
                 } else {
                     self.log_error(Parser::<'a>::peek_error(
                         &Token::Ident("IDEN".to_string()),
@@ -293,16 +313,16 @@ impl<'a> Parser<'a> {
             }
             Token::Return => {
                 self.next_token();
-                let expr = Expression::EMPTY;
-                loop {
-                    // println!("{:?}", self.current_token);
-                    if self.current_token != Token::Semicolon {
-                        self.next_token();
-                    } else {
-                        break;
+                if let Some(expr) = self.parse_expression(Sticky::LOWEST) {
+                    loop {
+                        if self.current_token != Token::Semicolon {
+                            self.next_token();
+                        } else {
+                            break;
+                        }
                     }
-                }
-                Some(Statement::ReturnStatement(expr))
+                    Some(Statement::ReturnStatement(expr))
+                } else { None }
             }
             _ => {
                 // //parse expr
@@ -503,22 +523,6 @@ mod tests {
     }
 
     #[test]
-    fn test_bang_operator() {
-        let tests = vec![("true", "!false"), ("false", "!true")];
-        for test in tests {
-            let l1 = lexer::Lexer::new(test.0);
-            let l2 = lexer::Lexer::new(test.1);
-            let mut p1 = Parser::new(l1);
-            let mut p2 = Parser::new(l2);
-            let program1 = p1.parse_program().unwrap();
-            let program2 = p2.parse_program().unwrap();
-            for i in 0..program1.statements.len() {
-                assert!(program1.statements[i] == program2.statements[i])
-            }
-        }
-    }
-
-    #[test]
     fn test_if_expression() {
         let input = "if (x < y) { x }";
         let l = lexer::Lexer::new(input);
@@ -549,8 +553,23 @@ mod tests {
     }
 
     #[test]
-    fn tcur() {
+    fn test_function_literal_parsing() {
         let input = "fn(x, y) { x + y; }";
+        let l = lexer::Lexer::new(input);
+        let mut p = Parser::new(l);
+        let program = p.parse_program().unwrap();
+        for s in program.statements.iter() {
+            println!("{:?}", &s)
+        }
+        assert!(
+            matches!(program.statements[0], Statement::ExpressionStatement(..)),
+            "Not an expression statement!"
+        )
+    }
+
+    #[test]
+    fn test_call_expression_parsing() {
+        let input = "add(1, 2 * 3, 4 + 5);";
         let l = lexer::Lexer::new(input);
         let mut p = Parser::new(l);
         let program = p.parse_program().unwrap();

@@ -1,23 +1,21 @@
 extern crate monkey_lang_rs;
 
 use std::{io::Write, str::FromStr};
+use monkey_lang_rs::evaluator::{self};
 
-use monkey_lang_rs::lexer;
+use monkey_lang_rs::{lexer, parser};
 
 fn main() {
     loop {
         let mut input = String::new();
         std::io::stdin().read_line(&mut input).unwrap();
-        let mut lexer = lexer::Lexer::new(&input);
         if input == String::from_str("exit").unwrap() {
             break;
         }
-        while let tok = lexer.next_token() {
-            match tok {
-                monkey_lang_rs::token::Token::EOF => break,
-                m => println!("{:?}", m)
-            }
-        }
+        let mut lexer = lexer::Lexer::new(&input);
+        let mut p = parser::Parser::new(lexer);
+        let program = p.parse_program().unwrap();
+        evaluator::eval_statements(program.statements);
         std::io::stdout().flush();
     }
 }
