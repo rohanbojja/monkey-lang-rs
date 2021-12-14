@@ -49,14 +49,39 @@ impl Evaluator {
         }
         res
     }
+
+
     fn eval_expr(&mut self, expr: &ast::Expression) -> object::Object {
         match expr {
+            Expression::Call(ex, args) => {
+                if let Object::Function(params, body, env) = self.eval_expr(ex) {
+                    let args = args.iter().map(
+                        |x| self.eval_expr(x)
+                    ).zip(params).collect::<Vec<_>>();
+                    let mut closure_env = self::env::Env::new_closure(&self.env);
+                    let env_before_closure_exec = self.env.clone();
+                    for (value, name) in args {
+                        closure_env.set(&name.value, value);
+                    }
+                    self.env = closure_env;
+                    let return_object = self.eval_block_statements(&body.statements);
+                    let ret = match return_object {
+                        Object::Return(x) => *x,
+                        o => o
+                    };
+                    self.env = env_before_closure_exec;
+                    ret
+                } else {
+                    Object::Null
+                }
+            }
             Expression::Function(args, body) => {
                 println!("FUNCTION: {:?}", expr);
                 if let Some(block) = body {
-                    return Object::Function(args.clone(), block.clone(), self.env.clone())
+                    Object::Function(args.clone(), block.clone(), self.env.clone())
+                } else {
+                    Object::Null
                 }
-                Object::Null
             }
             Expression::Ident(s) => {
                 self.env.get(s)
@@ -160,15 +185,36 @@ mod tests {
 
     /*
 
-           {"let a = 5; a;", 5},
-           {"let a = 5 * 5; a;", 25},
-           {"let a = 5; let b = a; b;", 5},
-           {"let a = 5; let b = a; let c = a + b + 5; c;", 15},
+           ("let identity = fn(x) { x; }; identity(5);", Object::Integer(5)),
+           ("let identity = fn(x) { return x; }; identity(5);", Object::Integer(5)),
+           ("let double = fn(x) { x * 2; }; double(5);", 1Object::Integer(0)),
+           ("let add = fn(x, y) { x + y; }; add(5, 5);", 1Object::Integer(0)),
+           ("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", 2Object::Integer(0)),
+           ("fn(x) { x; }(5)", Object::Integer(5)),
 
      */
 
     #[test]
-    fn test_function_object(){
+    fn test_function_applications() {
+        let tests = vec![
+            ("let identity = fn(x) { x; }; identity(5);", Object::Integer(5)),
+           ("let identity = fn(x) { return x; }; identity(5);", Object::Integer(5)),
+           ("let double = fn(x) { x * 2; }; double(5);", Object::Integer(10)),
+           ("let add = fn(x, y) { x + y; }; add(5, 5);", Object::Integer(10)),
+           ("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", Object::Integer(20)),
+           ("fn(x) { x; }(5)", Object::Integer(5)),
+        ];
+        for test in tests.iter() {
+            let l1 = lexer::Lexer::new(test.0);
+            let mut p1 = Parser::new(l1);
+            let program1 = p1.parse_program().unwrap();
+            let mut evaluator = evaluator::Evaluator::new();
+            assert_eq!(evaluator.eval_statements(&program1.statements), test.1)
+        }
+    }
+
+    #[test]
+    fn test_function_object() {
         let input = "fn(x) { x + 2; };";
         let l1 = lexer::Lexer::new(input);
         let mut p1 = Parser::new(l1);

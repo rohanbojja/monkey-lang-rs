@@ -146,12 +146,12 @@ impl<'a> Parser<'a> {
                         Token::Comma => self.expect_peek(Token::Comma),
                         Token::RParen => break,
                         _ => {
-                            self.log_error("Error parsing function parameters".to_string());
+                            self.log_error("Unexpected token found while parsing function parameters".to_string());
                             break;
                         }
                     };
                 } else {
-                    self.log_error("Error parsing function parameters".to_string());
+                    self.log_error("Params are not valid identifiers!".to_string());
                 }
             }
         }
@@ -206,14 +206,16 @@ impl<'a> Parser<'a> {
                 None
             }
         };
-
+        // println!("LEFT: {:?}, current: {:?}, next: {:?}", left, self.current_token, self.peek_token);
         /*
         infix stuff
          */
         while self.peek_token != Token::Semicolon && stick < self.peek_stickiness() {
             match self.peek_token {
                 Token::LParen => {
-                    self.next_token();
+                    // println!("MID: {:?}, current: {:?}, next: {:?}", left, self.current_token, self.peek_token);
+                    self.expect_peek(Token::LParen);
+                    // println!("MID2: {:?}, current: {:?}, next: {:?}", left, self.current_token, self.peek_token);
                     left = self.parse_call_arguments(left.unwrap());
                 }
                 Token::Asterisk
@@ -230,30 +232,40 @@ impl<'a> Parser<'a> {
                 _ => left = left,
             }
         }
+        // println!("RIGHT: {:?}\tcurrent: {:?}\tnext: {:?}", left, self.current_token, self.peek_token);
         left
     }
 
     fn parse_call_arguments(&mut self, identifier: ast::Expression) -> Option<ast::Expression> {
+        // println!("\t\t\tCALL");
         let mut arguments: Vec<ast::Expression> = vec![];
-        if self.peek_token != Token::RParen {
-            self.next_token();
-            loop {
-                if let Some(expr) = self.parse_expression(Sticky::LOWEST) {
-                    arguments.push(expr);
-                } else {
-                    self.log_error("Error parsing function arguments".to_string());
-                }
-                match self.peek_token {
-                    Token::Comma => self.expect_peek(Token::Comma),
-                    Token::RParen => break,
-                    _ => {
-                        self.log_error("Error parsing function parameters".to_string());
-                        break;
+        loop {
+            match &self.current_token {
+                Token::Comma => { self.expect_peek(Token::Comma); }
+                Token::RParen => {
+                    // println!("RPAREN!!!");
+                    break
+                },
+                _ => {
+                    // println!("{:?}\tcurrent: {:?}\tnext: {:?}", arguments, self.current_token, self.peek_token);
+                    if let Some(expr) = self.parse_expression(Sticky::LOWEST) {
+                        arguments.push(expr);
+                        match self.peek_token {
+                            Token::Comma => {
+                                self.expect_peek(Token::Comma);
+                            }
+                            _ => {
+                                self.next_token();
+                            }
+                        }
+                        // println!("Pushed {:?}\tcurrent: {:?}\tnext: {:?}", arguments, self.current_token, self.peek_token);
+                    } else {
+                        self.log_error("Error parsing call arguments, invalid expression".to_string());
                     }
-                };
-            }
+                }
+            };
+            // println!("loop done{:?}\tcurrent: {:?}\tnext: {:?}", arguments, self.current_token, self.peek_token);
         }
-        self.expect_peek(Token::RParen);
         Some(ast::Expression::Call(Box::new(identifier), arguments))
     }
 
