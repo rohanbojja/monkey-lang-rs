@@ -1,17 +1,17 @@
 use crate::token::Token;
 
-#[derive(Debug,PartialEq, Eq)]
+#[derive(Debug,PartialEq, Eq, Clone)]
 pub enum Statement{
     LetStatement(Identifier, Expression),
     ReturnStatement(Expression),
     ExpressionStatement(Expression)
 }
-#[derive(Debug,PartialEq, Eq)]
+#[derive(Debug,PartialEq, Eq, Clone)]
 pub struct BlockStatement{
     pub statements: Vec<Statement>
 }
 
-#[derive(Debug,PartialEq, Eq)]
+#[derive(Debug,PartialEq, Eq, Clone)]
 pub enum Expression{
     EMPTY,
     Ident(String),
@@ -25,7 +25,7 @@ pub enum Expression{
     Call(Box<Expression>, Vec<Expression>) // Identifier or function literal
 }
 
-#[derive(Debug,PartialEq, Eq)]
+#[derive(Debug,PartialEq, Eq, Clone)]
 pub struct Identifier{
     pub token: Token,
     pub value: String,

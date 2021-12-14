@@ -1,4 +1,4 @@
-mod env;
+pub mod env;
 
 use crate::ast::{self, Statement, Expression};
 use crate::object::{self, Object};
@@ -13,9 +13,7 @@ pub struct Evaluator {
 impl Evaluator {
     pub fn new() -> Evaluator {
         Evaluator {
-            env: env::Env {
-                store: HashMap::new()
-            }
+            env: env::Env::new()
         }
     }
 
@@ -53,6 +51,13 @@ impl Evaluator {
     }
     fn eval_expr(&mut self, expr: &ast::Expression) -> object::Object {
         match expr {
+            Expression::Function(args, body) => {
+                println!("FUNCTION: {:?}", expr);
+                if let Some(block) = body {
+                    return Object::Function(args.clone(), block.clone(), self.env.clone())
+                }
+                Object::Null
+            }
             Expression::Ident(s) => {
                 self.env.get(s)
             }
@@ -118,8 +123,8 @@ impl Evaluator {
         match expr {
             Statement::LetStatement(x, y) => {
                 let value = self.eval_expr(y);
-                self.env.set(&x.value, value);
-                Object::Null
+                self.env.set(&x.value, value.clone());
+                value
             }
             Statement::ReturnStatement(val) => {
                 Object::Return(Box::new(self.eval_expr(val)))
@@ -161,6 +166,17 @@ mod tests {
            {"let a = 5; let b = a; let c = a + b + 5; c;", 15},
 
      */
+
+    #[test]
+    fn test_function_object(){
+        let input = "fn(x) { x + 2; };";
+        let l1 = lexer::Lexer::new(input);
+        let mut p1 = Parser::new(l1);
+        let program1 = p1.parse_program().unwrap();
+        let mut evaluator = evaluator::Evaluator::new();
+        evaluator.eval_statements(&program1.statements);
+    }
+
     #[test]
     fn test_return_value() {
         let tests = vec![

@@ -134,7 +134,7 @@ impl<'a> Parser<'a> {
 
     fn parse_function_params(&mut self) -> Vec<ast::Identifier> {
         let mut identifiers: Vec<ast::Identifier> = vec![];
-        if self.peek_token != Token::RParen {
+        if self.current_token != Token::RParen {
             loop {
                 if let Token::Ident(ref x) = self.current_token {
                     let iden = ast::Identifier {

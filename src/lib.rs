@@ -1,4 +1,5 @@
 extern crate core;
+extern crate proc_macro;
 
 pub mod lexer;
 pub mod token;
