@@ -58,7 +58,7 @@ impl Evaluator {
                     let args = args.iter().map(
                         |x| self.eval_expr(x)
                     ).zip(params).collect::<Vec<_>>();
-                    let mut closure_env = self::env::Env::new_closure(&self.env);
+                    let mut closure_env = self::env::Env::new_closure(&env);
                     let env_before_closure_exec = self.env.clone();
                     for (value, name) in args {
                         closure_env.set(&name.value, value);
@@ -72,11 +72,11 @@ impl Evaluator {
                     self.env = env_before_closure_exec;
                     ret
                 } else {
+                    println!("Something went wrong!");
                     Object::Null
                 }
             }
             Expression::Function(args, body) => {
-                println!("FUNCTION: {:?}", expr);
                 if let Some(block) = body {
                     Object::Function(args.clone(), block.clone(), self.env.clone())
                 } else {
@@ -88,7 +88,6 @@ impl Evaluator {
             }
             Expression::If(condition, consequence, alternative) => {
                 let c = self.eval_expr(condition);
-                println!("Condition: {:?}", c);
                 if Evaluator::is_truthy(&c) {
                     if let Some(block) = consequence {
                         self.eval_block_statements(&block.statements)
@@ -185,24 +184,38 @@ mod tests {
 
     /*
 
-           ("let identity = fn(x) { x; }; identity(5);", Object::Integer(5)),
-           ("let identity = fn(x) { return x; }; identity(5);", Object::Integer(5)),
-           ("let double = fn(x) { x * 2; }; double(5);", 1Object::Integer(0)),
-           ("let add = fn(x, y) { x + y; }; add(5, 5);", 1Object::Integer(0)),
-           ("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", 2Object::Integer(0)),
-           ("fn(x) { x; }(5)", Object::Integer(5)),
+           let newAdder = fn(x) {
+                 fn(y) { x + y };
+            };
+           let addTwo = newAdder(2);
+           addTwo(2);`
 
      */
+    #[test]
+    fn test_closures() {
+        let tests = vec![
+            ("let adder = fn(x) { fn(y) { x + y } }\n
+              let m = adder(2)\n
+              m(3)", Object::Integer(5)),
+        ];
+        for test in tests.iter() {
+            let l1 = lexer::Lexer::new(test.0);
+            let mut p1 = Parser::new(l1);
+            let program1 = p1.parse_program().unwrap();
+            let mut evaluator = evaluator::Evaluator::new();
+            assert_eq!(evaluator.eval_statements(&program1.statements), test.1)
+        }
+    }
 
     #[test]
     fn test_function_applications() {
         let tests = vec![
             ("let identity = fn(x) { x; }; identity(5);", Object::Integer(5)),
-           ("let identity = fn(x) { return x; }; identity(5);", Object::Integer(5)),
-           ("let double = fn(x) { x * 2; }; double(5);", Object::Integer(10)),
-           ("let add = fn(x, y) { x + y; }; add(5, 5);", Object::Integer(10)),
-           ("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", Object::Integer(20)),
-           ("fn(x) { x; }(5)", Object::Integer(5)),
+            ("let identity = fn(x) { return x; }; identity(5);", Object::Integer(5)),
+            ("let double = fn(x) { x * 2; }; double(5);", Object::Integer(10)),
+            ("let add = fn(x, y) { x + y; }; add(5, 5);", Object::Integer(10)),
+            ("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", Object::Integer(20)),
+            ("fn(x) { x; }(5)", Object::Integer(5)),
         ];
         for test in tests.iter() {
             let l1 = lexer::Lexer::new(test.0);
