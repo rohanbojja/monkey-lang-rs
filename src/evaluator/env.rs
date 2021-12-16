@@ -17,9 +17,9 @@ impl Env {
         }
     }
 
-    pub fn new_closure(env: &Env) -> Self {
+    pub fn new_closure(env_func: &Env, env: &Env) -> Self {
         Env {
-            store: HashMap::new(),
+            store: env_func.store.clone(),
             outer: Some(Rc::new(RefCell::new(env.clone()))),
         }
     }

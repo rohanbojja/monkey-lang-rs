@@ -1,7 +1,7 @@
 extern crate monkey_lang_rs;
 
 use std::{io::Write, str::FromStr};
-use monkey_lang_rs::evaluator::{self};
+use monkey_lang_rs::evaluator::{self, Evaluator};
 
 use monkey_lang_rs::{lexer, parser};
 

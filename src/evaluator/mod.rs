@@ -58,7 +58,7 @@ impl Evaluator {
                     let args = args.iter().map(
                         |x| self.eval_expr(x)
                     ).zip(params).collect::<Vec<_>>();
-                    let mut closure_env = self::env::Env::new_closure(&env);
+                    let mut closure_env = self::env::Env::new_closure(&env, &self.env);
                     let env_before_closure_exec = self.env.clone();
                     for (value, name) in args {
                         closure_env.set(&name.value, value);
@@ -84,7 +84,8 @@ impl Evaluator {
                 }
             }
             Expression::Ident(s) => {
-                self.env.get(s)
+                let obj = self.env.get(s);
+                obj
             }
             Expression::If(condition, consequence, alternative) => {
                 let c = self.eval_expr(condition);
@@ -169,9 +170,18 @@ impl Evaluator {
                 }
                 _ => {}
             }
-            println!("Output: {:?}", res);
         }
         res
+    }
+
+    pub fn unwrap_object(obj: Object) -> String {
+        match obj {
+            Object::Integer(x) => { x.to_string() }
+            Object::String(x) => { x.to_string() }
+            Object::Null => { "null".to_string() }
+            Object::Boolean(x) => { x.to_string() }
+            _ => "Can't unwrap this type of object!".to_string()
+        }
     }
 }
 

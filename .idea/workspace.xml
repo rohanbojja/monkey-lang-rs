@@ -24,7 +24,12 @@
   <component name="ChangeListManager">
     <list default="true" id="afcf2b71-09e5-44d2-8652-520a1ffe05bb" name="Default Changelist" comment="Working REPL">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/evaluator/env.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/evaluator/env.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/evaluator/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/evaluator/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,7 +74,7 @@
       <command value="cargo test" />
     </option>
   </component>
-  <component name="RunManager" selected="Cargo.test">
+  <component name="RunManager" selected="Cargo.Test tests::test_fibonacci">
     <configuration name="Run monkey_lang_rs" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="command" value="run --package monkey_lang_rs --bin monkey_lang_rs" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -100,8 +105,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test evaluator::tests::test_function_applications" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package monkey_lang_rs --lib evaluator::tests::test_function_applications -- --exact" />
+    <configuration name="Test parser::tests::test_call_expression_parsing" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package monkey_lang_rs --lib parser::tests::test_call_expression_parsing -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
@@ -115,8 +120,8 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test parser::tests::test_call_expression_parsing" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package monkey_lang_rs --lib parser::tests::test_call_expression_parsing -- --exact" />
+    <configuration name="Test tests::test_fibonacci" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package monkey_lang_rs --lib tests::test_fibonacci -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
@@ -147,11 +152,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo.Test tests::test_fibonacci" />
         <item itemvalue="Cargo.test" />
         <item itemvalue="Cargo.Test evaluator::tests::test_closures" />
         <item itemvalue="Cargo.test" />
         <item itemvalue="Cargo.Run monkey_lang_rs" />
-        <item itemvalue="Cargo.Test evaluator::tests::test_function_applications" />
       </list>
     </recent_temporary>
   </component>
@@ -200,22 +205,22 @@
       <screen x="0" y="0" width="1440" height="900" />
     </state>
     <state x="408" y="190" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/0.0.1440.900@0.0.1440.900" timestamp="1639453326538" />
-    <state width="1398" height="324" key="GridCell.Tab.0.bottom" timestamp="1639512631903">
+    <state width="1398" height="324" key="GridCell.Tab.0.bottom" timestamp="1639624808218">
       <screen x="0" y="0" width="1440" height="900" />
     </state>
-    <state width="1398" height="324" key="GridCell.Tab.0.bottom/0.0.1440.900@0.0.1440.900" timestamp="1639512631903" />
-    <state width="1398" height="324" key="GridCell.Tab.0.center" timestamp="1639512631902">
+    <state width="1398" height="324" key="GridCell.Tab.0.bottom/0.0.1440.900@0.0.1440.900" timestamp="1639624808218" />
+    <state width="1398" height="324" key="GridCell.Tab.0.center" timestamp="1639624808217">
       <screen x="0" y="0" width="1440" height="900" />
     </state>
-    <state width="1398" height="324" key="GridCell.Tab.0.center/0.0.1440.900@0.0.1440.900" timestamp="1639512631902" />
-    <state width="1398" height="324" key="GridCell.Tab.0.left" timestamp="1639512631902">
+    <state width="1398" height="324" key="GridCell.Tab.0.center/0.0.1440.900@0.0.1440.900" timestamp="1639624808217" />
+    <state width="1398" height="324" key="GridCell.Tab.0.left" timestamp="1639624808217">
       <screen x="0" y="0" width="1440" height="900" />
     </state>
-    <state width="1398" height="324" key="GridCell.Tab.0.left/0.0.1440.900@0.0.1440.900" timestamp="1639512631902" />
-    <state width="1398" height="324" key="GridCell.Tab.0.right" timestamp="1639512631903">
+    <state width="1398" height="324" key="GridCell.Tab.0.left/0.0.1440.900@0.0.1440.900" timestamp="1639624808217" />
+    <state width="1398" height="324" key="GridCell.Tab.0.right" timestamp="1639624808217">
       <screen x="0" y="0" width="1440" height="900" />
     </state>
-    <state width="1398" height="324" key="GridCell.Tab.0.right/0.0.1440.900@0.0.1440.900" timestamp="1639512631903" />
+    <state width="1398" height="324" key="GridCell.Tab.0.right/0.0.1440.900@0.0.1440.900" timestamp="1639624808217" />
     <state x="381" y="136" key="RollbackChangesDialog" timestamp="1639458777365">
       <screen x="0" y="0" width="1440" height="900" />
     </state>
@@ -228,6 +233,10 @@
       <screen x="0" y="0" width="1440" height="900" />
     </state>
     <state x="343" y="64" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.0.1440.900@0.0.1440.900" timestamp="1639461412183" />
+    <state x="126" y="112" key="new project wizard" timestamp="1639514874655">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state x="126" y="112" key="new project wizard/0.0.1440.900@0.0.1440.900" timestamp="1639514874655" />
     <state x="384" y="202" width="672" height="677" key="run.anything.popup" timestamp="1639512630543">
       <screen x="0" y="0" width="1440" height="900" />
     </state>
